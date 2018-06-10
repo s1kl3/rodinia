@@ -5,13 +5,15 @@ RODINIA_BASE_DIR := $(shell pwd)
 CUDA_BIN_DIR := $(RODINIA_BASE_DIR)/bin/linux/cuda
 OMP_BIN_DIR := $(RODINIA_BASE_DIR)/bin/linux/omp
 OPENCL_BIN_DIR := $(RODINIA_BASE_DIR)/bin/linux/opencl
+OPENCRUN_BIN_DIR := $(RODINIA_BASE_DIR)/bin/linux/opencrun
 
 CUDA_DIRS := backprop bfs b+tree cfd dwt2d gaussian heartwall hotspot hotspot3D huffman hybridsort kmeans lavaMD leukocyte lud mummergpu myocyte nn nw particlefilter pathfinder srad streamcluster
 OMP_DIRS  := backprop bfs b+tree cfd                heartwall hotspot hotspot3D                    kmeans lavaMD leukocyte lud mummergpu myocyte nn nw particlefilter pathfinder srad streamcluster
 OCL_DIRS  := backprop bfs b+tree cfd dwt2d gaussian heartwall hotspot hotspot3D         hybridsort kmeans lavaMD leukocyte lud           myocyte nn nw particlefilter pathfinder srad streamcluster
+OCR_DIRS  := backprop bfs b+tree cfd dwt2d gaussian heartwall hotspot hotspot3D         hybridsort kmeans lavaMD leukocyte lud           myocyte nn nw particlefilter pathfinder srad streamcluster
 
-.PHONY: all DATA CUDA OMP OPENCL
-all: DATA CUDA OMP OPENCL
+.PHONY: all DATA CUDA OMP OPENCL OPENCRUN
+all: DATA CUDA OMP OPENCL OPENCRUN
 
 
 DATA:
@@ -88,7 +90,31 @@ OPENCL: OPENCL_BIN_DIR
 	cd opencl/srad;				make;	cp srad $(OPENCL_BIN_DIR)
 	cd opencl/streamcluster;	make;	cp streamcluster $(OPENCL_BIN_DIR)
 
-.PHONY: CUDA_BIN_DIR OMP_BIN_DIR OPENCL_BIN_DIR
+OPENCRUN: OPENCRUN_BIN_DIR
+	cd opencrun/backprop;		make;	cp backprop $(OPENCRUN_BIN_DIR)
+	cd opencrun/bfs;			make;	cp bfs $(OPENCRUN_BIN_DIR)
+	cd opencrun/b+tree;			make;	cp b+tree.out $(OPENCRUN_BIN_DIR)
+	cd opencrun/cfd;			make;	cp euler3d $(OPENCRUN_BIN_DIR)
+	cd opencrun/dwt2d;			make;	cp dwt2d  $(OPENCRUN_BIN_DIR)
+	cd opencrun/gaussian;		make;	cp gaussian $(OPENCRUN_BIN_DIR)
+	cd opencrun/heartwall;		make;	cp heartwall $(OPENCRUN_BIN_DIR)
+	cd opencrun/hotspot;		make;	cp hotspot $(OPENCRUN_BIN_DIR)
+	cd opencrun/hotspot3D;		make;	cp 3D $(OPENCRUN_BIN_DIR)
+	cd opencrun/hybridsort;		make;	cp hybridsort $(OPENCRUN_BIN_DIR)
+	cd opencrun/kmeans;			make;	cp kmeans $(OPENCRUN_BIN_DIR)
+	cd opencrun/lavaMD;			make;	cp lavaMD $(OPENCRUN_BIN_DIR)
+	cd opencrun/leukocyte;		make;	cp OpenCL/leukocyte $(OPENCRUN_BIN_DIR)
+	cd opencrun/lud;			make;	cp ocl/lud $(OPENCRUN_BIN_DIR)
+	cd opencrun/myocyte;		make;	cp myocyte.out $(OPENCRUN_BIN_DIR)
+	cd opencrun/nn;				make;	cp nn $(OPENCRUN_BIN_DIR)
+	cd opencrun/nw;				make;	cp nw $(OPENCRUN_BIN_DIR)
+	cd opencrun/particlefilter;	make;	cp OCL_particlefilter_naive OCL_particlefilter_single OCL_particlefilter_double $(OPENCRUN_BIN_DIR)
+	cd opencrun/pathfinder;		make;	cp pathfinder $(OPENCRUN_BIN_DIR)
+	cd opencrun/srad;			make;	cp srad $(OPENCRUN_BIN_DIR)
+	cd opencrun/streamcluster;	make;	cp streamcluster $(OPENCRUN_BIN_DIR)
+
+
+.PHONY: CUDA_BIN_DIR OMP_BIN_DIR OPENCL_BIN_DIR OPENCRUN_BIN_DIR
 CUDA_BIN_DIR:
 	mkdir -p $(CUDA_BIN_DIR)
 
@@ -98,8 +124,11 @@ OMP_BIN_DIR:
 OPENCL_BIN_DIR:
 	mkdir -p $(OPENCL_BIN_DIR)
 
-.PHONY: clean DATA_clean CUDA_clean OMP_clean OCL_clean
-clean: DATA_clean CUDA_clean OMP_clean OCL_clean
+OPENCRUN_BIN_DIR:
+	mkdir -p $(OPENCRUN_BIN_DIR)
+
+.PHONY: clean DATA_clean CUDA_clean OMP_clean OCL_clean OCR_clean
+clean: DATA_clean CUDA_clean OMP_clean OCL_clean OCR_clean
 
 DATA_clean:
 	make -C data clean
@@ -115,3 +144,8 @@ OMP_clean:
 OCL_clean:
 	if test -d $(OPENCL_BIN_DIR); then cd $(OPENCL_BIN_DIR); rm -f *; fi
 	for dir in $(OCL_DIRS) ; do cd opencl/$$dir ; make clean ; cd ../.. ; done
+
+OCR_clean:
+	if test -d $(OPENCRUN_BIN_DIR); then cd $(OPENCRUN_BIN_DIR); rm -f *; fi
+	for dir in $(OCR_DIRS) ; do cd opencrun/$$dir ; make clean ; cd ../.. ; done
+
