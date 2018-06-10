@@ -223,7 +223,7 @@ int main(int argc, char **argv){
 	size_t local_work[3] = { (workgroupsize>0)?workgroupsize:1, 1, 1 };
 	size_t global_work[3] = { nworkitems, 1, 1 }; //nworkitems = no. of GPU threads
 	
-	int use_gpu = 1;
+	int use_gpu = 0;
 	// OpenCL initialization
 	if(initialize(use_gpu)) return -1;
 

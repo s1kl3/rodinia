@@ -77,7 +77,7 @@ int compute_tran_temp(cl_mem MatrixPower, cl_mem MatrixTemp[2], int col, int row
 	
 	cl_int error;
 	
-	// Determine GPU work group grid
+	// Determine CPU work group grid
 	size_t global_work_size[2];
 	global_work_size[0] = BLOCK_SIZE * blockCols;
 	global_work_size[1] = BLOCK_SIZE * blockRows;
@@ -114,7 +114,7 @@ int compute_tran_temp(cl_mem MatrixPower, cl_mem MatrixTemp[2], int col, int row
 		error = clFlush(command_queue);
 		if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
 		
-		// Swap input and output GPU matrices
+		// Swap input and output CPU matrices
 		src = 1 - src;
 		dst = 1 - dst;
 	}
@@ -164,9 +164,9 @@ int main(int argc, char** argv) {
 	if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
 	printf("Platform: %s\n", pbuf);
 	
-	// Create a GPU context
+	// Create a CPU context
 	cl_context_properties context_properties[3] = { CL_CONTEXT_PLATFORM, (cl_context_properties) platform, 0};
-    context = clCreateContextFromType(context_properties, CL_DEVICE_TYPE_GPU, NULL, NULL, &error);
+    context = clCreateContextFromType(context_properties, CL_DEVICE_TYPE_CPU, NULL, NULL, &error);
     if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
 	
 	// Get and print the chosen device (if there are multiple devices, choose the first one)

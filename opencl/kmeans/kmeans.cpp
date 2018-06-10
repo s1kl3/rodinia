@@ -135,7 +135,7 @@ int allocate(int n_points, int n_features, int n_clusters, float **feature)
 	fclose(fp);
 		
 	// OpenCL initialization
-	int use_gpu = 1;
+	int use_gpu = 0;
 	if(initialize(use_gpu)) return -1;
 
 	// compile kernel

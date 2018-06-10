@@ -53,7 +53,7 @@ cl_int errNum = 0;
 
 ///
 // functions for preparing create opencl program, contains CreateContext, CreateProgram, CreateCommandQueue, CreateMemBuffer, and Cleanup
-// Create an OpenCL context on the first available GPU platform. 
+// Create an OpenCL context on the first available CPU platform. 
 cl_context CreateContext()
 {
     cl_context context = NULL;
@@ -73,18 +73,12 @@ cl_context CreateContext()
         (cl_context_properties)platformIds[1],
         0
     };
-    context = clCreateContextFromType(contextProperties, CL_DEVICE_TYPE_GPU,
+    context = clCreateContextFromType(contextProperties, CL_DEVICE_TYPE_CPU,
                                       NULL, NULL, &errNum);
     if (errNum != CL_SUCCESS)
     {
-        std::cout << "Could not create GPU context, trying CPU..." << std::endl;
-        context = clCreateContextFromType(contextProperties, CL_DEVICE_TYPE_CPU,
-                                          NULL, NULL, &errNum);
-        if (errNum != CL_SUCCESS)
-        {
-            std::cerr << "Failed to create an OpenCL GPU or CPU context." << std::endl;
-            return NULL;
-        }
+      std::cerr << "Failed to create an OpenCL CPU context." << std::endl;
+      return NULL;
     }
     
     return context;

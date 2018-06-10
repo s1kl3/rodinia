@@ -82,15 +82,15 @@ typedef struct dim_str
 } dim_str;
 
 //========================================================================================================================================================================================================200
-//	kernel_gpu_opencl KERNEL
+//	kernel_cpu_opencl KERNEL
 //========================================================================================================================================================================================================200
 
-__kernel void kernel_gpu_opencl(	par_str d_par_gpu,
-					dim_str d_dim_gpu,
-					__global box_str *d_box_gpu,
-					__global FOUR_VECTOR *d_rv_gpu,
-					__global fp *d_qv_gpu,
-					__global FOUR_VECTOR *d_fv_gpu)
+__kernel void kernel_cpu_opencl(	par_str d_par_cpu,
+					dim_str d_dim_cpu,
+					__global box_str *d_box_cpu,
+					__global FOUR_VECTOR *d_rv_cpu,
+					__global fp *d_qv_cpu,
+					__global FOUR_VECTOR *d_fv_cpu)
 {
 
 	//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------180
@@ -105,14 +105,14 @@ __kernel void kernel_gpu_opencl(	par_str d_par_gpu,
 	//	DO FOR THE NUMBER OF BOXES
 	//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------180
 
-	if(bx<d_dim_gpu.number_boxes){
+	if(bx<d_dim_cpu.number_boxes){
 
 		//------------------------------------------------------------------------------------------------------------------------------------------------------160
 		//	Extract input parameters
 		//------------------------------------------------------------------------------------------------------------------------------------------------------160
 
 		// parameters
-		fp a2 = 2*d_par_gpu.alpha*d_par_gpu.alpha;
+		fp a2 = 2*d_par_cpu.alpha*d_par_cpu.alpha;
 
 		// home box
 		int first_i;
@@ -147,7 +147,7 @@ __kernel void kernel_gpu_opencl(	par_str d_par_gpu,
 		//----------------------------------------------------------------------------------------------------------------------------------140
 
 		// home box - box parameters
-		first_i = d_box_gpu[bx].offset;
+		first_i = d_box_cpu[bx].offset;
 
 		//----------------------------------------------------------------------------------------------------------------------------------140
 		//	Copy to shared memory
@@ -156,7 +156,7 @@ __kernel void kernel_gpu_opencl(	par_str d_par_gpu,
 		// (enable the section below only if wanting to use shared memory)
 		// home box - shared memory
 		while(wtx<NUMBER_PAR_PER_BOX){
-			rA_shared[wtx] = d_rv_gpu[first_i+wtx];
+			rA_shared[wtx] = d_rv_cpu[first_i+wtx];
 			wtx = wtx + NUMBER_THREADS;
 		}
 		wtx = tx;
@@ -170,7 +170,7 @@ __kernel void kernel_gpu_opencl(	par_str d_par_gpu,
 		//------------------------------------------------------------------------------------------------------------------------------------------------------160
 
 		// loop over nei boxes of home box
-		for (k=0; k<(1+d_box_gpu[bx].nn); k++){
+		for (k=0; k<(1+d_box_cpu[bx].nn); k++){
 
 			//----------------------------------------50
 			//	nei box - get pointer to the right box
@@ -180,7 +180,7 @@ __kernel void kernel_gpu_opencl(	par_str d_par_gpu,
 				pointer = bx;													// set first box to be processed to home box
 			}
 			else{
-				pointer = d_box_gpu[bx].nei[k-1].number;							// remaining boxes are nei boxes
+				pointer = d_box_cpu[bx].nei[k-1].number;							// remaining boxes are nei boxes
 			}
 
 			//----------------------------------------------------------------------------------------------------------------------------------140
@@ -188,7 +188,7 @@ __kernel void kernel_gpu_opencl(	par_str d_par_gpu,
 			//----------------------------------------------------------------------------------------------------------------------------------140
 
 			// nei box - box parameters
-			first_j = d_box_gpu[pointer].offset;
+			first_j = d_box_cpu[pointer].offset;
 
 			//----------------------------------------------------------------------------------------------------------------------------------140
 			//	Setup parameters
@@ -197,8 +197,8 @@ __kernel void kernel_gpu_opencl(	par_str d_par_gpu,
 			// (enable the section below only if wanting to use shared memory)
 			// nei box - shared memory
 			while(wtx<NUMBER_PAR_PER_BOX){
-				rB_shared[wtx] = d_rv_gpu[first_j+wtx];
-				qB_shared[wtx] = d_qv_gpu[first_j+wtx];
+				rB_shared[wtx] = d_rv_cpu[first_j+wtx];
+				qB_shared[wtx] = d_qv_cpu[first_j+wtx];
 				wtx = wtx + NUMBER_THREADS;
 			}
 			wtx = tx;
@@ -218,20 +218,20 @@ __kernel void kernel_gpu_opencl(	par_str d_par_gpu,
 				for (j=0; j<NUMBER_PAR_PER_BOX; j++){
 
 					// (disable the section below only if wanting to use shared memory)
-					// r2 = d_rv_gpu[first_i+wtx].v + d_rv_gpu[first_j+j].v - DOT(d_rv_gpu[first_i+wtx],d_rv_gpu[first_j+j]); 
+					// r2 = d_rv_cpu[first_i+wtx].v + d_rv_cpu[first_j+j].v - DOT(d_rv_cpu[first_i+wtx],d_rv_cpu[first_j+j]); 
 					// u2 = a2*r2;
 					// vij= exp(-u2);
 					// fs = 2*vij;
-					// d.x = d_rv_gpu[first_i+wtx].x  - d_rv_gpu[first_j+j].x;
+					// d.x = d_rv_cpu[first_i+wtx].x  - d_rv_cpu[first_j+j].x;
 					// fxij=fs*d.x;
-					// d.y = d_rv_gpu[first_i+wtx].y  - d_rv_gpu[first_j+j].y;
+					// d.y = d_rv_cpu[first_i+wtx].y  - d_rv_cpu[first_j+j].y;
 					// fyij=fs*d.y;
-					// d.z = d_rv_gpu[first_i+wtx].z  - d_rv_gpu[first_j+j].z;
+					// d.z = d_rv_cpu[first_i+wtx].z  - d_rv_cpu[first_j+j].z;
 					// fzij=fs*d.z;
-					// d_fv_gpu[first_i+wtx].v +=  d_qv_gpu[first_j+j]*vij;
-					// d_fv_gpu[first_i+wtx].x +=  d_qv_gpu[first_j+j]*fxij;
-					// d_fv_gpu[first_i+wtx].y +=  d_qv_gpu[first_j+j]*fyij;
-					// d_fv_gpu[first_i+wtx].z +=  d_qv_gpu[first_j+j]*fzij;
+					// d_fv_cpu[first_i+wtx].v +=  d_qv_cpu[first_j+j]*vij;
+					// d_fv_cpu[first_i+wtx].x +=  d_qv_cpu[first_j+j]*fxij;
+					// d_fv_cpu[first_i+wtx].y +=  d_qv_cpu[first_j+j]*fyij;
+					// d_fv_cpu[first_i+wtx].z +=  d_qv_cpu[first_j+j]*fzij;
 
 					// (enable the section below only if wanting to use shared memory)
 					r2 = rA_shared[wtx].v + rB_shared[j].v - DOT(rA_shared[wtx],rB_shared[j]); 
@@ -244,10 +244,10 @@ __kernel void kernel_gpu_opencl(	par_str d_par_gpu,
 					fyij=fs*d.y;
 					d.z = rA_shared[wtx].z  - rB_shared[j].z;
 					fzij=fs*d.z;
-					d_fv_gpu[first_i+wtx].v +=  qB_shared[j]*vij;
-					d_fv_gpu[first_i+wtx].x +=  qB_shared[j]*fxij;
-					d_fv_gpu[first_i+wtx].y +=  qB_shared[j]*fyij;
-					d_fv_gpu[first_i+wtx].z +=  qB_shared[j]*fzij;
+					d_fv_cpu[first_i+wtx].v +=  qB_shared[j]*vij;
+					d_fv_cpu[first_i+wtx].x +=  qB_shared[j]*fxij;
+					d_fv_cpu[first_i+wtx].y +=  qB_shared[j]*fyij;
+					d_fv_cpu[first_i+wtx].z +=  qB_shared[j]*fzij;
 
 				}
 
@@ -277,7 +277,7 @@ __kernel void kernel_gpu_opencl(	par_str d_par_gpu,
 }
 
 //========================================================================================================================================================================================================200
-//	END kernel_gpu_opencl KERNEL
+//	END kernel_npu_opencl KERNEL
 //========================================================================================================================================================================================================200
 
 #ifdef __cplusplus

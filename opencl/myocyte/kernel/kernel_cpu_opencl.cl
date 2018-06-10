@@ -1308,7 +1308,7 @@ kernel_cam(	fp timeinst,
 //========================================================================================================================================================================================================200
 
 __kernel void 
-kernel_gpu_opencl(	int timeinst,
+kernel_cpu_opencl(	int timeinst,
 					__global fp *d_initvalu,
 					__global fp *d_finavalu,
 					__global fp *d_params,

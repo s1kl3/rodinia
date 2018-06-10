@@ -80,14 +80,14 @@ MAT * chop_flip_image(unsigned char *image, int height, int width, int top, int 
 }
 
 
-// Chooses the best GPU on the current machine
-void choose_GPU() {
+// Chooses the best CPU on the current machine
+void choose_CPU() {
 	select_device();
 }
 
 
-// Computes and then transfers to the GPU all of the
-//  constant matrices required by the GPU kernels
+// Computes and then transfers to the CPU all of the
+//  constant matrices required by the CPU kernels
 void compute_constants() {
 	// Compute memory sizes
 	int strel_m = 12 * 2 + 1;
@@ -116,7 +116,7 @@ void compute_constants() {
 	// Compute the structuring element used in dilation
 	float *host_strel = structuring_element(12);
 	
-	// Transfer the computed matrices to the GPU
+	// Transfer the computed matrices to the CPU
 	transfer_constants(host_sin_angle, host_cos_angle, host_tX, host_tY, strel_m, strel_n, host_strel);
 	
 	// Free the memory (only need to free strel since the rest are declared statically)
@@ -144,7 +144,7 @@ MAT *GICOV(MAT *grad_x, MAT *grad_y) {
 		}
 	}
 
-	// Offload the GICOV score computation to the GPU
+	// Offload the GICOV score computation to the CPU
 	float *host_gicov = GICOV_OpenCL(grad_m, grad_n, host_grad_x, host_grad_y);
 
 	// Copy the results into a new host matrix
@@ -192,7 +192,7 @@ MAT *dilate(MAT *img_in) {
 	int strel_m = 12 * 2 + 1;
 	int strel_n = 12 * 2 + 1;
 
-	// Offload the dilation to the GPU
+	// Offload the dilation to the CPU
 	float *host_img_dilated = dilate_OpenCL(max_gicov_m, max_gicov_n, strel_m, strel_n);
 
 	// Copy results into a new host matrix

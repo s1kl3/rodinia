@@ -10,14 +10,14 @@ OCL_LIB_DIR = -L$(OPENCL_LIB)
 C_C = gcc
 
 ./a.out:	./main.o \
-			./kernel/kernel_gpu_opencl_wrapper.o \
+			./kernel/kernel_cpu_opencl_wrapper.o \
 			./util/avi/avilib.o \
 			./util/avi/avimod.o \
 			./util/file/file.o \
 			./util/timer/timer.o \
 			./util/opencl/opencl.o
 	$(C_C)	./main.o \
-			./kernel/kernel_gpu_opencl_wrapper.o \
+			./kernel/kernel_cpu_opencl_wrapper.o \
 			./util/avi/avilib.o \
 			./util/avi/avimod.o \
 			./util/file/file.o \
@@ -42,11 +42,11 @@ C_C = gcc
 #	KERNELS
 # ======================================================================================================================================================150
 
-./kernel/kernel_gpu_opencl_wrapper.o:	./kernel/kernel_gpu_opencl_wrapper.h \
-										./kernel/kernel_gpu_opencl_wrapper.c
-	$(C_C) $(KERNEL_DIM)	./kernel/kernel_gpu_opencl_wrapper.c \
+./kernel/kernel_cpu_opencl_wrapper.o:	./kernel/kernel_cpu_opencl_wrapper.h \
+										./kernel/kernel_cpu_opencl_wrapper.c
+	$(C_C) $(KERNEL_DIM)	./kernel/kernel_cpu_opencl_wrapper.c \
 			-c \
-			-o ./kernel/kernel_gpu_opencl_wrapper.o \
+			-o ./kernel/kernel_cpu_opencl_wrapper.o \
 			-O3 \
 			$(OCL_INC_DIR)
 

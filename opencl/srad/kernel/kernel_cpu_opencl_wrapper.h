@@ -3,20 +3,24 @@ extern "C" {
 #endif
 
 //========================================================================================================================================================================================================200
-//	KERNEL_GPU_CUDA_WRAPPER HEADER
+//	KERNEL_CPU_CUDA_WRAPPER HEADER
 //========================================================================================================================================================================================================200
 
 void 
-kernel_gpu_opencl_wrapper(params_common common,
-							int* endoRow,
-							int* endoCol,
-							int* tEndoRowLoc,
-							int* tEndoColLoc,
-							int* epiRow,
-							int* epiCol,
-							int* tEpiRowLoc,
-							int* tEpiColLoc,
-							avi_t* frames);
+kernel_cpu_opencl_wrapper(	fp* image,											// input image
+							int Nr,												// IMAGE nbr of rows
+							int Nc,												// IMAGE nbr of cols
+							long Ne,											// IMAGE nbr of elem
+							int niter,											// nbr of iterations
+							fp lambda,											// update step size
+							long NeROI,											// ROI nbr of elements
+							int* iN,
+							int* iS,
+							int* jE,
+							int* jW,
+							int iter,											// primary loop
+							int mem_size_i,
+							int mem_size_j);
 
 //========================================================================================================================================================================================================200
 //	END

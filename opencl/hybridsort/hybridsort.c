@@ -90,57 +90,57 @@ int main(int argc, char** argv)
     printf("Sorting list of %d floats.\n", numElements);
     int mem_size = (numElements + (DIVISIONS*4))*sizeof(float);
 	// Allocate enough for the input list
-	float *cpu_idata = (float *)malloc(mem_size);
-    float *cpu_odata = (float *)malloc(mem_size);
-	// Allocate enough for the output list on the cpu side
+	float *host_idata = (float *)malloc(mem_size);
+    float *host_odata = (float *)malloc(mem_size);
+	// Allocate enough for the output list on the host side
 	float *d_output = (float *)malloc(mem_size);
-	// Allocate enough memory for the output list on the gpu side
-	float *gpu_odata = (float *)malloc(mem_size);
+	// Allocate enough memory for the output list on the CPU side
+	float *cpu_odata = (float *)malloc(mem_size);
 	float datamin = FLT_MAX;
 	float datamax = -FLT_MAX;
     
     if(strcmp(argv[1],"r")==0) {
     for (int i = 0; i < numElements; i++) {
         // Generate random floats between 0 and 1 for the input data
-		cpu_idata[i] = ((float) rand() / RAND_MAX);
+		host_idata[i] = ((float) rand() / RAND_MAX);
   
         //Compare data at index to data minimum, if less than current minimum, set that element as new minimum
-		datamin = fminf(cpu_idata[i], datamin);
+		datamin = fminf(host_idata[i], datamin);
         //Same as above but for maximum
-		datamax = fmaxf(cpu_idata[i], datamax);
+		datamax = fmaxf(host_idata[i], datamax);
 	}
     }
     else {
         FILE *fp;
         fp = fopen(argv[1],"r");
         for(int i = 0; i < numElements; i++) {
-            fscanf(fp,"%f",&cpu_idata[i]);
-            datamin = fminf(cpu_idata[i], datamin);
-            datamax = fmaxf(cpu_idata[i],datamax);
+            fscanf(fp,"%f",&host_idata[i]);
+            datamin = fminf(host_idata[i], datamin);
+            datamax = fmaxf(host_idata[i],datamax);
         }
 	}
     FILE *tp;
     const char filename2[]="./hybridinput.txt";
     tp = fopen(filename2,"w");
     for(int i = 0; i < SIZE; i++) {
-        fprintf(tp,"%f ",cpu_idata[i]);
+        fprintf(tp,"%f ",host_idata[i]);
     }
     
     fclose(tp);
-    memcpy(cpu_odata, cpu_idata, mem_size);
-    clock_t gpu_start = clock();
+    memcpy(host_odata, host_idata, mem_size);
+    clock_t cpu_start = clock();
     init_bucketsort(numElements);
     int *sizes = (int*) malloc(DIVISIONS * sizeof(int));
     int *nullElements = (int*) malloc(DIVISIONS * sizeof(int));
     unsigned int *origOffsets = (unsigned int *) malloc((DIVISIONS + 1) * sizeof(int));
     clock_t bucketsort_start = clock();
-    bucketSort(cpu_idata,d_output,numElements,sizes,nullElements,datamin,datamax, origOffsets);
+    bucketSort(host_idata,d_output,numElements,sizes,nullElements,datamin,datamax, origOffsets);
     clock_t bucketsort_diff = clock() - bucketsort_start;
     finish_bucketsort();
     double bucketTime = getBucketTime();
 
     cl_float4 *d_origList = (cl_float4*) d_output;
-    cl_float4 *d_resultList = (cl_float4*) cpu_idata;
+    cl_float4 *d_resultList = (cl_float4*) host_idata;
     
     int newlistsize = 0;
     for(int i = 0; i < DIVISIONS; i++){
@@ -152,34 +152,34 @@ int main(int argc, char** argv)
     cl_float4 *mergeresult = runMergeSort(newlistsize,DIVISIONS,d_origList,d_resultList,sizes,nullElements,origOffsets);
     clock_t mergesort_diff = clock() - mergesort_start;
     finish_mergesort();
-    gpu_odata = (float*)mergeresult;
+    cpu_odata = (float*)mergeresult;
 #ifdef TIMER
-    clock_t gpu_diff = clock() - gpu_start;
-    int gpu_msec = gpu_diff * 1000 / CLOCKS_PER_SEC;
+    clock_t cpu_diff = clock() - cpu_start;
+    int cpu_msec = cpu_diff * 1000 / CLOCKS_PER_SEC;
     int bucketsort_msec = bucketsort_diff * 1000 / CLOCKS_PER_SEC;
     int mergesort_msec = mergesort_diff * 1000 / CLOCKS_PER_SEC;
     double mergeTime = getMergeTime();
 
-    printf("GPU execution time: %0.3f ms  \n", bucketsort_msec+mergesort_msec+bucketTime+mergeTime);
+    printf("Host execution time: %0.3f ms  \n", bucketsort_msec+mergesort_msec+bucketTime+mergeTime);
     printf("  --Bucketsort execution time: %0.3f ms \n", bucketsort_msec+bucketTime);
     printf("  --Mergesort execution time: %0.3f ms \n", mergesort_msec+mergeTime);
 #endif
 #ifdef VERIFY
-    clock_t cpu_start = clock(), cpu_diff;
+    clock_t host_start = clock(), host_diff;
     
-    qsort(cpu_odata, numElements, sizeof(float), compare);
-    cpu_diff = clock() - cpu_start;
-    int cpu_msec = cpu_diff * 1000 / CLOCKS_PER_SEC;
-    printf("CPU execution time: %d ms  \n", cpu_msec);
+    qsort(host_odata, numElements, sizeof(float), compare);
+    host_diff = clock() - host_start;
+    int host_msec = host_diff * 1000 / CLOCKS_PER_SEC;
+    printf("Host execution time: %d ms  \n", host_msec);
     printf("Checking result...");
     
 	// Result checking
 	int count = 0;
 	for(int i = 0; i < numElements; i++){
-		if(cpu_odata[i] != gpu_odata[i])
+		if(host_odata[i] != cpu_odata[i])
 		{
 			printf("Sort missmatch on element %d: \n", i);
-			printf("CPU = %f : GPU = %f\n", cpu_odata[i], gpu_odata[i]);
+			printf("Host = %f : CPU = %f\n", host_odata[i], cpu_odata[i]);
 			count++;
 			break;
 		}
@@ -193,17 +193,17 @@ int main(int argc, char** argv)
     const char filename3[]="./hybridoutput.txt";
     tp1 = fopen(filename3,"w");
     for(int i = 0; i < SIZE; i++) {
-        fprintf(tp1,"%f ",cpu_idata[i]);
+        fprintf(tp1,"%f ",host_idata[i]);
     }
     
     fclose(tp1);
 #endif
     
 
-//    printf("%d \n",cpu_odata[1]);
+//    printf("%d \n",host_odata[1]);
 //    int summy = 0;
 //    for(int i =0; i < HISTOGRAM_SIZE; i++)
-//        summy+=cpu_odata[i];
+//        summy+=host_odata[i];
 //    printf("%d \n", summy);
     return 0;
 }

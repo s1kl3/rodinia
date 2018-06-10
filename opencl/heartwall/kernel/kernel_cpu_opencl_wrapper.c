@@ -27,21 +27,21 @@
 #include "./../util/avi/avimod.h"					// (in directory)							needed by avi functions
 
 //======================================================================================================================================================150
-//	KERNEL_GPU_CUDA_WRAPPER FUNCTION HEADER
+//	KERNEL_CPU_CUDA_WRAPPER FUNCTION HEADER
 //======================================================================================================================================================150
 
-#include "./kernel_gpu_opencl_wrapper.h"			// (in directory)
+#include "./kernel_cpu_opencl_wrapper.h"			// (in directory)
 
 //======================================================================================================================================================150
 //	END
 //======================================================================================================================================================150
 
 //========================================================================================================================================================================================================200
-//	KERNEL_GPU_CUDA_WRAPPER FUNCTION
+//	KERNEL_CPU_CUDA_WRAPPER FUNCTION
 //========================================================================================================================================================================================================200
 
 void 
-kernel_gpu_opencl_wrapper(	params_common common,
+kernel_cpu_opencl_wrapper(	params_common common,
 							int* endoRow,
 							int* endoCol,
 							int* tEndoRowLoc,
@@ -61,7 +61,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 	int i;
 
 	//======================================================================================================================================================150
-	//	GPU SETUP
+	//	CPU SETUP
 	//======================================================================================================================================================150
 
 	//====================================================================================================100
@@ -125,7 +125,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 													(cl_context_properties) platform, 
 													0};
 
-	// Create context for selected platform being GPU
+	// Create context for selected platform being CPU
 	cl_context context;
 	context = clCreateContextFromType(	context_properties, 
 										CL_DEVICE_TYPE_ALL, 
@@ -203,7 +203,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 	//====================================================================================================100
 
 	// Load kernel source code from file
-	const char *source = load_kernel_source("./kernel/kernel_gpu_opencl.cl");
+	const char *source = load_kernel_source("./kernel/kernel_cpu_opencl.cl");
 	size_t sourceSize = strlen(source);
 
 	// Create the program
@@ -254,7 +254,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 	// Create kernel
 	cl_kernel kernel;
 	kernel = clCreateKernel(program, 
-							"kernel_gpu_opencl", 
+							"kernel_cpu_opencl", 
 							&error);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
@@ -266,7 +266,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 	// cudaThreadSynchronize();		// the above does it
 
 	//======================================================================================================================================================150
-	//	GPU MEMORY ALLOCATION
+	//	CPU MEMORY ALLOCATION
 	//======================================================================================================================================================150
 
 	//====================================================================================================100
@@ -717,7 +717,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 	//====================================================================================================100
 
 	//======================================================================================================================================================150
-	//	GPU MEMORY			COPY
+	//	CPU MEMORY			COPY
 	//======================================================================================================================================================150
 
 	//====================================================================================================100
@@ -1167,7 +1167,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 	for(frame_no=0; frame_no<common.frames_processed; frame_no++){
 
 		//==================================================50
-		//	get and write current frame to GPU buffer
+		//	get and write current frame to CPU buffer
 		//==================================================50
 
 		// Extract a cropped version of the first frame from the video file
@@ -1177,7 +1177,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 							0,									// scaled?
 							1);									// converted
 
-		// copy frame to GPU memory
+		// copy frame to CPU memory
 		error = clEnqueueWriteBuffer(	command_queue, 
 										d_frame, 
 										1, 

@@ -40,7 +40,8 @@
 // Main computation pass: compute per-workgroup partial histograms
 ////////////////////////////////////////////////////////////////////////////////
 
-inline void addData1024(volatile __local uint *s_WarpHist, uint data, uint tag){
+__attribute__((always_inline))
+void addData1024(volatile __local uint *s_WarpHist, uint data, uint tag){
     uint count;
     do{
         count = s_WarpHist[data]  & 0x07FFFFFFU;

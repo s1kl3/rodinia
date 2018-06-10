@@ -9,7 +9,7 @@ void finish_bucketsort();
 void bucketSort(float *d_input, float *d_output, int listsize,
 				int *sizes, int *nullElements, float minimum, float maximum,
 				unsigned int *origOffsets);
-void histogram1024GPU(
+void histogram1024CPU(
                       unsigned int *h_Result,
                       float *d_Data,
                       float minimum,

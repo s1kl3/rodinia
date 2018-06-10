@@ -39,10 +39,10 @@
 // t -- Print the B+ tree
 // l -- Print the keys of the leaves (bottom row of the tree)
 // v -- Toggle output of pointer addresses ("verbose") in tree and leaves.
-// k <x> -- Run <x> bundled queries on the CPU and GPU (B+Tree) (Selects random values for each search)
-// j <x> <y> -- Run a range search of <x> bundled queries on the CPU and GPU (B+Tree) with the range of each search of size <y>
-// x <z> -- Run a single search for value z on the GPU and CPU
-// y <a> <b> -- Run a single range search for range a-b on the GPU and CPU
+// k <x> -- Run <x> bundled queries on the host and CPU (B+Tree) (Selects random values for each search)
+// j <x> <y> -- Run a range search of <x> bundled queries on the host and CPU (B+Tree) with the range of each search of size <y>
+// x <z> -- Run a single search for value z on the CPU and host
+// y <a> <b> -- Run a single range search for range a-b on the CPU and host
 // q -- Quit. (Or use Ctl-D.)
 
 //======================================================================================================================================================150
@@ -84,8 +84,8 @@
 //	KERNEL HEADERS
 //======================================================================================================================================================150
 
-#include "./kernel/kernel_gpu_opencl_wrapper.h"		// (in directory provided here)
-#include "./kernel/kernel_gpu_opencl_wrapper_2.h"		// (in directory provided here)
+#include "./kernel/kernel_cpu_opencl_wrapper.h"		// (in directory provided here)
+#include "./kernel/kernel_cpu_opencl_wrapper_2.h"		// (in directory provided here)
 
 //======================================================================================================================================================150
 //	HEADER
@@ -641,7 +641,7 @@ kmalloc(int size)
 	return r;
 }
 
-//transforms the current B+ Tree into a single, contiguous block of memory to be used on the GPU
+//transforms the current B+ Tree into a single, contiguous block of memory to be used on the CPU
 long 
 transform_to_cuda(	node * root, 
 					bool verbose)
@@ -2006,7 +2006,7 @@ main(	int argc,
 	// get tree statistics
 	// ------------------------------------------------------------60
 
-	printf("Transforming data to a GPU suitable structure...\n");
+	printf("Transforming data to a CPU suitable structure...\n");
 	long mem_used = transform_to_cuda(root,0);
 	maxheight = height(root);
 	long rootLoc = (long)knodes - (long)mem;
@@ -2126,7 +2126,7 @@ main(	int argc,
 			}
 
 			// ----------------------------------------40
-			// [GPU] find K (initK, findK)
+			// [CPU] find K (initK, findK)
 			// ----------------------------------------40
 
 			case 'k':
@@ -2144,48 +2144,48 @@ main(	int argc,
 					exit(0);
 				}
 
-				// INPUT: records CPU allocation (setting pointer in mem variable)
+				// INPUT: records host allocation (setting pointer in mem variable)
 				record *records = (record *)mem;
 				long records_elem = (long)rootLoc / sizeof(record);
 				long records_mem = (long)rootLoc;
 				printf("records_elem=%d, records_unit_mem=%d, records_mem=%d\n", (int)records_elem, (int)sizeof(record), (int)records_mem);
 
-				// INPUT: knodes CPU allocation (setting pointer in mem variable)
+				// INPUT: knodes host allocation (setting pointer in mem variable)
 				knode *knodes = (knode *)((long)mem + (long)rootLoc);
 				long knodes_elem = ((long)(mem_used) - (long)rootLoc) / sizeof(knode);
 				long knodes_mem = (long)(mem_used) - (long)rootLoc;
 				printf("knodes_elem=%d, knodes_unit_mem=%d, knodes_mem=%d\n", (int)knodes_elem, (int)sizeof(knode), (int)knodes_mem);
 
-				// INPUT: currKnode CPU allocation
+				// INPUT: currKnode host allocation
 				long *currKnode;
 				currKnode = (long *)malloc(count*sizeof(long));
-				// INPUT: offset CPU initialization
+				// INPUT: offset host initialization
 				memset(currKnode, 0, count*sizeof(long));
 
-				// INPUT: offset CPU allocation
+				// INPUT: offset host allocation
 				long *offset;
 				offset = (long *)malloc(count*sizeof(long));
-				// INPUT: offset CPU initialization
+				// INPUT: offset host initialization
 				memset(offset, 0, count*sizeof(long));
 
-				// INPUT: keys CPU allocation
+				// INPUT: keys host allocation
 				int *keys;
 				keys = (int *)malloc(count*sizeof(int));
-				// INPUT: keys CPU initialization
+				// INPUT: keys host initialization
 				int i;
 				for(i = 0; i < count; i++){
 					keys[i] = (rand()/(float)RAND_MAX)*size;
 				}
 
-				// OUTPUT: ans CPU allocation
+				// OUTPUT: ans host allocation
 				record *ans = (record *)malloc(sizeof(record)*count);
-				// OUTPUT: ans CPU initialization
+				// OUTPUT: ans host initialization
 				for(i = 0; i < count; i++){
 					ans[i].value = -1;
 				}
 
 				// OpenCL kernel
-				kernel_gpu_opencl_wrapper(	records,
+				kernel_cpu_opencl_wrapper(	records,
 											records_mem,
 											knodes,
 											knodes_elem,
@@ -2249,7 +2249,7 @@ main(	int argc,
 			}
 
 			// ----------------------------------------40
-			// [GPU] find Range K (initK, findRangeK)
+			// [CPU] find Range K (initK, findRangeK)
 			// ----------------------------------------40
 
 			case 'j':
@@ -2273,42 +2273,42 @@ main(	int argc,
 					exit(0);
 				}
 
-				// INPUT: knodes CPU allocation (setting pointer in mem variable)
+				// INPUT: knodes host allocation (setting pointer in mem variable)
 				knode *knodes = (knode *)((long)mem + (long)rootLoc);
 				long knodes_elem = ((long)(mem_used) - (long)rootLoc) / sizeof(knode);
 				long knodes_mem = (long)(mem_used) - (long)rootLoc;
 				printf("knodes_elem=%d, knodes_unit_mem=%d, knodes_mem=%d\n", (int)knodes_elem, (int)sizeof(knode), (int)knodes_mem);
 
-				// INPUT: currKnode CPU allocation
+				// INPUT: currKnode host allocation
 				long *currKnode;
 				currKnode = (long *)malloc(count*sizeof(long));
-				// INPUT: offset CPU initialization
+				// INPUT: offset host initialization
 				memset (currKnode, 0, count*sizeof(long));
 
-				// INPUT: offset CPU allocation
+				// INPUT: offset host allocation
 				long *offset;
 				offset = (long *)malloc(count*sizeof(long));
-				// INPUT: offset CPU initialization
+				// INPUT: offset host initialization
 				memset (offset, 0, count*sizeof(long));
 
-				// INPUT: lastKnode CPU allocation
+				// INPUT: lastKnode host allocation
 				long *lastKnode;
 				lastKnode = (long *)malloc(count*sizeof(long));
-				// INPUT: offset CPU initialization
+				// INPUT: offset host initialization
 				memset (lastKnode, 0, count*sizeof(long));
 
-				// INPUT: offset_2 CPU allocation
+				// INPUT: offset_2 host allocation
 				long *offset_2;
 				offset_2 = (long *)malloc(count*sizeof(long));
-				// INPUT: offset CPU initialization
+				// INPUT: offset host initialization
 				memset (offset_2, 0, count*sizeof(long));
 
-				// INPUT: start, end CPU allocation
+				// INPUT: start, end host allocation
 				int *start;
 				start = (int *)malloc(count*sizeof(int));
 				int *end;
 				end = (int *)malloc(count*sizeof(int));
-				// INPUT: start, end CPU initialization
+				// INPUT: start, end host initialization
 				int i;
 				for(i = 0; i < count; i++){
 					start[i] = (rand()/(float)RAND_MAX)*size;
@@ -2319,19 +2319,19 @@ main(	int argc,
 					}
 				}
 
-				// INPUT: recstart, reclenght CPU allocation
+				// INPUT: recstart, reclenght host allocation
 				int *recstart;
 				recstart = (int *)malloc(count*sizeof(int));
 				int *reclength;
 				reclength = (int *)malloc(count*sizeof(int));
-				// OUTPUT: ans CPU initialization
+				// OUTPUT: ans host initialization
 				for(i = 0; i < count; i++){
 					recstart[i] = 0;
 					reclength[i] = 0;
 				}
 
 				// CUDA kernel
-				kernel_gpu_opencl_wrapper_2(knodes,
+				kernel_cpu_opencl_wrapper_2(knodes,
 											knodes_elem,
 											knodes_mem,
 

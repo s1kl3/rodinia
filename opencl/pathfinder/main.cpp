@@ -103,7 +103,7 @@ int main(int argc, char** argv)
 
 	// Create and initialize the OpenCL object.
 	OpenCL cl(1);  // 1 means to display output (debugging mode).
-	cl.init(1);    // 1 means to use GPU. 0 means use CPU.
+	cl.init(0);    // 1 means to use GPU. 0 means use CPU.
 	cl.gwSize(rows * cols);
 
 	// Create and build the kernel.

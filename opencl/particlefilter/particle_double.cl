@@ -1,10 +1,11 @@
-#if defined(cl_amd_fp64) || defined(cl_khr_fp64)
+// #if defined(cl_amd_fp64) || defined(cl_khr_fp64)
  
-#if defined(cl_amd_fp64)
-#pragma OPENCL EXTENSION cl_amd_fp64 : enable
-#elif defined(cl_khr_fp64)
-#pragma OPENCL EXTENSION cl_khr_fp64 : enable
-#endif
+// #if defined(cl_amd_fp64)
+// #pragma OPENCL EXTENSION cl_amd_fp64 : enable
+// #elif defined(cl_khr_fp64)
+// #pragma OPENCL EXTENSION cl_khr_fp64 : enable
+// #endif
+#pragma OPENCL EXTENSION cl_khr_fp64: enable
 
 /** added this function. was missing in original double version.
  * Takes in a double and returns an integer that approximates to that double
@@ -315,4 +316,4 @@ __kernel void likelihood_kernel(__global double * arrayX, __global double * arra
 	
 }//*/
 
-#endif
+// #endif

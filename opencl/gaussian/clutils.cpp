@@ -352,10 +352,10 @@ cl_context cl_init_context(int platform, int dev,int quiet) {
 					(void *)&dtype,
 					NULL);
 	if(cl_errChk(status,"Error in Getting Device Info\n",true)) exit(1);
-	if(dtype == CL_DEVICE_TYPE_GPU) {
+	if((dtype == CL_DEVICE_TYPE_GPU) || (dtype == (CL_DEVICE_TYPE_GPU | CL_DEVICE_TYPE_DEFAULT))) {
 	  if (!quiet) printf("Creating GPU Context\n\n");
 	}
-	else if (dtype == CL_DEVICE_TYPE_CPU) {
+	else if ((dtype == CL_DEVICE_TYPE_CPU) || (dtype == (CL_DEVICE_TYPE_CPU | CL_DEVICE_TYPE_DEFAULT))) {
       if (!quiet) printf("Creating CPU Context\n\n");
 	}
 	else perror("This Context Type Not Supported\n");

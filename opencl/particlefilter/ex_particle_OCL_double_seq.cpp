@@ -510,7 +510,7 @@ int particleFilter(unsigned char * I, int IszX, int IszY, int Nfr, int * seed, i
     fclose(fp);
 
     // OpenCL initialization
-    int use_gpu = 1;
+    int use_gpu = 0;
     if (initialize(use_gpu)) return -1;
 
     // compile kernel

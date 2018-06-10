@@ -28,7 +28,7 @@ extern MAT * TMatrix(unsigned int N, unsigned int M);
 extern VEC * getsampling(MAT * m, int ns);
 extern VEC * getfdriv(MAT * m, int ns);
 
-extern void choose_GPU();
+extern void choose_CPU();
 extern void compute_constants();
 extern void uniformseg(VEC * cellx_row, VEC * celly_row, MAT * x, MAT * y);
 extern void splineenergyform01(MAT * Cx, MAT * Cy, MAT * Ix, MAT * Iy, int ns, double delta, double dt, int typeofcell);

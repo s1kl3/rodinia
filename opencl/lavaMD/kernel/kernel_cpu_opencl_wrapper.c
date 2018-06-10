@@ -1,83 +1,67 @@
-// #ifdef __cplusplus
-// extern "C" {
-// #endif
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 //========================================================================================================================================================================================================200
 //	DEFINE/INCLUDE
 //========================================================================================================================================================================================================200
 
 //======================================================================================================================================================150
-//	COMMON
+//	LIBRARIES
+//======================================================================================================================================================150
+#include <string.h>
+
+#include <CL/cl.h>					// (in library path provided to compiler)	needed by OpenCL types and functions
+
+//======================================================================================================================================================150
+//	MAIN FUNCTION HEADER
 //======================================================================================================================================================150
 
-#include "../common.h"									// (in directory)
+#include "./../main.h"								// (in the main program folder)	needed to recognized input parameters
 
 //======================================================================================================================================================150
 //	UTILITIES
 //======================================================================================================================================================150
 
-#include "../util/timer/timer.h"						// (in directory)
+#include "./../util/opencl/opencl.h"				// (in library path specified to compiler)	needed by for device functions
+#include "./../util/timer/timer.h"					// (in library path specified to compiler)	needed by timer
 
 //======================================================================================================================================================150
-//	KERNEL
+//	KERNEL_CPU_OPENCL_WRAPPER FUNCTION HEADER
 //======================================================================================================================================================150
 
-#include "./solver.c"									// (in directory)
-#include "../util/opencl/opencl.h"						// (in directory)
-
-//======================================================================================================================================================150
-//	LIBRARIES
-//======================================================================================================================================================150
-
-#include <stdio.h>										// (in path known to compiler)	needed by printf
-#include <string.h>										// (in path known to compiler)	needed by strlen
-#include <CL/cl.h>										// (in path provided to compiler)	needed by OpenCL types and functions
-
-//======================================================================================================================================================150
-//	HEADER
-//======================================================================================================================================================150
-
-#include "kernel_gpu_opencl_wrapper.h"					// (in directory)
-
-//======================================================================================================================================================150
-//	END
-//======================================================================================================================================================150
+#include "./kernel_cpu_opencl_wrapper.h"				// (in the current directory)
 
 //========================================================================================================================================================================================================200
-//	MAIN FUNCTION
+//	KERNEL_CPU_OPENCL_WRAPPER FUNCTION
 //========================================================================================================================================================================================================200
 
-int 
-kernel_gpu_opencl_wrapper(	int xmax,
-							int workload,
-
-							fp ***y,
-							fp **x,
-							fp **params,
-							fp *com)
+void 
+kernel_cpu_opencl_wrapper(	par_str par_cpu,
+							dim_str dim_cpu,
+							box_str* box_cpu,
+							FOUR_VECTOR* rv_cpu,
+							fp* qv_cpu,
+							FOUR_VECTOR* fv_cpu)
 {
 
 	//======================================================================================================================================================150
-	//	VARIABLES
+	//	CPU VARIABLES
 	//======================================================================================================================================================150
 
+	// timer
 	long long time0;
 	long long time1;
 	long long time2;
 	long long time3;
 	long long time4;
 	long long time5;
-	long long timecopyin = 0;
-	long long timekernel = 0;
-	long long timecopyout = 0;
-	long long timeother;
+	long long time6;
 
 	time0 = get_time();
 
-	int i;
-
 	//======================================================================================================================================================150
-	//	GPU SETUP
+	//	CPU SETUP
 	//======================================================================================================================================================150
 
 	//====================================================================================================100
@@ -130,10 +114,10 @@ kernel_gpu_opencl_wrapper(	int xmax,
 													(cl_context_properties) platform, 
 													0};
 
-	// Create context for selected platform being GPU
+	// Create context for selected platform being CPU
 	cl_context context;
 	context = clCreateContextFromType(	context_properties, 
-										CL_DEVICE_TYPE_GPU, 
+										CL_DEVICE_TYPE_CPU, 
 										NULL, 
 										NULL, 
 										&error);
@@ -196,7 +180,7 @@ kernel_gpu_opencl_wrapper(	int xmax,
 	//====================================================================================================100
 
 	// Load kernel source code from file
-	const char *source = load_kernel_source("./kernel/kernel_gpu_opencl.cl");
+	const char *source = load_kernel_source("./kernel/kernel_cpu_opencl.cl");
 	size_t sourceSize = strlen(source);
 
 	// Create the program
@@ -208,11 +192,26 @@ kernel_gpu_opencl_wrapper(	int xmax,
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
 
+	// parameterized kernel dimension
+	char clOptions[110];
+	//  sprintf(clOptions,"-I../../src");                                                                                 
+	sprintf(clOptions,"-I.");
+#ifdef RD_WG_SIZE
+	sprintf(clOptions + strlen(clOptions), " -DRD_WG_SIZE=%d", RD_WG_SIZE);
+#endif
+#ifdef RD_WG_SIZE_0
+	sprintf(clOptions + strlen(clOptions), " -DRD_WG_SIZE_0=%d", RD_WG_SIZE_0);
+#endif
+#ifdef RD_WG_SIZE_0_0
+	sprintf(clOptions + strlen(clOptions), " -DRD_WG_SIZE_0_0=%d", RD_WG_SIZE_0_0);
+#endif
+
+
 	// Compile the program
 	error = clBuildProgram(	program, 
 							1, 
 							&device, 
-							"-I./../", 
+							clOptions, 
 							NULL, 
 							NULL);
 	// Print warnings and errors from compilation
@@ -224,17 +223,15 @@ kernel_gpu_opencl_wrapper(	int xmax,
 							sizeof(log)-1, 
 							log, 
 							NULL);
-	printf("-----OpenCL Compiler Output-----\n");
 	if (strstr(log,"warning:") || strstr(log, "error:")) 
 		printf("<<<<\n%s\n>>>>\n", log);
-	printf("--------------------------------\n");
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
 
 	// Create kernel
 	cl_kernel kernel;
 	kernel = clCreateKernel(program, 
-							"kernel_gpu_opencl", 
+							"kernel_cpu_opencl", 
 							&error);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
@@ -245,122 +242,248 @@ kernel_gpu_opencl_wrapper(	int xmax,
 
 	// cudaThreadSynchronize();
 
+	//====================================================================================================100
+	//	EXECUTION PARAMETERS
+	//====================================================================================================100
+
+	size_t local_work_size[1];
+	local_work_size[0] = NUMBER_THREADS;
+	size_t global_work_size[1];
+	global_work_size[0] = dim_cpu.number_boxes * local_work_size[0];
+
+	printf("# of blocks = %d, # of threads/block = %d (ensure that device can handle)\n", global_work_size[0]/local_work_size[0], local_work_size[0]);
+
 	time1 = get_time();
 
 	//======================================================================================================================================================150
-	//	ALLOCATE MEMORY
+	//	CPU MEMORY				(MALLOC)
 	//======================================================================================================================================================150
 
 	//====================================================================================================100
-	//	d_initvalu_mem
+	//	CPU MEMORY				COPY IN
 	//====================================================================================================100
 
-	int d_initvalu_mem;
-	d_initvalu_mem = EQUATIONS * sizeof(fp);
-	cl_mem d_initvalu;
-	d_initvalu = clCreateBuffer(context,					// context
-								CL_MEM_READ_WRITE,			// flags
-								d_initvalu_mem,				// size of buffer
-								NULL,						// host pointer (optional)
-								&error );					// returned error
+	//==================================================50
+	//	boxes
+	//==================================================50
+
+	cl_mem d_box_cpu;
+	d_box_cpu = clCreateBuffer(	context, 
+								CL_MEM_READ_WRITE, 
+								dim_cpu.box_mem, 
+								NULL, 
+								&error );
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
 
-	//====================================================================================================100
-	//	d_finavalu_mem
-	//====================================================================================================100
+	//==================================================50
+	//	rv
+	//==================================================50
 
-	int d_finavalu_mem;
-	d_finavalu_mem = EQUATIONS * sizeof(fp);
-	cl_mem d_finavalu;
-	d_finavalu = clCreateBuffer(context, 
+	cl_mem d_rv_cpu;
+	d_rv_cpu = clCreateBuffer(	context, 
 								CL_MEM_READ_WRITE, 
-								d_finavalu_mem, 
+								dim_cpu.space_mem, 
+								NULL, 
+								&error );
+	if (error != CL_SUCCESS) 
+		fatal_CL(error, __LINE__);
+
+	//==================================================50
+	//	qv
+	//==================================================50
+
+	cl_mem d_qv_cpu;
+	d_qv_cpu = clCreateBuffer(	context, 
+								CL_MEM_READ_WRITE, 
+								dim_cpu.space_mem2, 
 								NULL, 
 								&error );
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
 
 	//====================================================================================================100
-	//	d_params_mem
+	//	CPU MEMORY				COPY (IN & OUT)
 	//====================================================================================================100
 
-	int d_params_mem;
-	d_params_mem = PARAMETERS * sizeof(fp);
-	cl_mem d_params;
-	d_params = clCreateBuffer(	context, 
+	//==================================================50
+	//	fv
+	//==================================================50
+
+	cl_mem d_fv_cpu;
+	d_fv_cpu = clCreateBuffer(	context, 
 								CL_MEM_READ_WRITE, 
-								d_params_mem, 
+								dim_cpu.space_mem, 
 								NULL, 
 								&error );
-	if (error != CL_SUCCESS) 
-		fatal_CL(error, __LINE__);
-
-	//====================================================================================================100
-	//	d_com_mem
-	//====================================================================================================100
-
-	int d_com_mem;
-	d_com_mem = 3 * sizeof(fp);
-	cl_mem d_com;
-	d_com = clCreateBuffer(	context, 
-							CL_MEM_READ_WRITE, 
-							d_com_mem, 
-							NULL, 
-							&error );
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
 
 	time2 = get_time();
 
 	//======================================================================================================================================================150
-	//	EXECUTION
+	//	CPU MEMORY				COPY IN
 	//======================================================================================================================================================150
 
-	int status;
+	//====================================================================================================100
+	//	CPU MEMORY				COPY IN
+	//====================================================================================================100
 
-	for(i=0; i<workload; i++){
+	//==================================================50
+	//	boxes
+	//==================================================50
 
-		status = solver(	y[i],
-							x[i],
-							xmax,
-							params[i],
-							com,
+	error = clEnqueueWriteBuffer(	command_queue,			// command queue
+									d_box_cpu,				// destination
+									1,						// block the source from access until this copy operation complates (1=yes, 0=no)
+									0,						// offset in destination to write to
+									dim_cpu.box_mem,		// size to be copied
+									box_cpu,				// source
+									0,						// # of events in the list of events to wait for
+									NULL,					// list of events to wait for
+									NULL);					// ID of this operation to be used by waiting operations
+	if (error != CL_SUCCESS) 
+		fatal_CL(error, __LINE__);
 
-							d_initvalu,
-							d_finavalu,
-							d_params,
-							d_com,
+	//==================================================50
+	//	rv
+	//==================================================50
 
-							command_queue,
-							kernel,
+	error = clEnqueueWriteBuffer(	command_queue, 
+									d_rv_cpu, 
+									1, 
+									0, 
+									dim_cpu.space_mem, 
+									rv_cpu, 
+									0, 
+									0, 
+									0);
+	if (error != CL_SUCCESS) 
+		fatal_CL(error, __LINE__);
 
-							&timecopyin,
-							&timekernel,
-							&timecopyout);
+	//==================================================50
+	//	qv
+	//==================================================50
 
-		if(status !=0){
-			printf("STATUS: %d\n", status);
-		}
+	error = clEnqueueWriteBuffer(	command_queue, 
+									d_qv_cpu, 
+									1, 
+									0, 
+									dim_cpu.space_mem2, 
+									qv_cpu, 
+									0, 
+									0, 
+									0);
+	if (error != CL_SUCCESS) 
+		fatal_CL(error, __LINE__);
 
-	}
+	//====================================================================================================100
+	//	CPU MEMORY				COPY (IN & OUT)
+	//====================================================================================================100
 
-	// // // print results
-	// // int k;
-	// // for(i=0; i<workload; i++){
-		// // printf("WORKLOAD %d:\n", i);
-		// // for(j=0; j<(xmax+1); j++){
-			// // printf("\tTIME %d:\n", j);
-			// // for(k=0; k<EQUATIONS; k++){
-				// // printf("\t\ty[%d][%d][%d]=%13.10f\n", i, j, k, y[i][j][k]);
-			// // }
-		// // }
-	// // }
+	//==================================================50
+	//	fv
+	//==================================================50
+
+	error = clEnqueueWriteBuffer(	command_queue, 
+									d_fv_cpu, 
+									1,
+									0, 
+									dim_cpu.space_mem, 
+									fv_cpu, 
+									0, 
+									0, 
+									0);
+	if (error != CL_SUCCESS) 
+		fatal_CL(error, __LINE__);
 
 	time3 = get_time();
 
 	//======================================================================================================================================================150
-	//	FREE GPU MEMORY
+	//	KERNEL
+	//======================================================================================================================================================150
+
+	// ???
+	clSetKernelArg(	kernel, 
+					0, 
+					sizeof(par_str), 
+					(void *) &par_cpu);
+	clSetKernelArg(	kernel, 
+					1, 
+					sizeof(dim_str), 
+					(void *) &dim_cpu);
+	clSetKernelArg(	kernel, 
+					2, 
+					sizeof(cl_mem), 
+					(void *) &d_box_cpu);
+	clSetKernelArg(	kernel, 
+					3, 
+					sizeof(cl_mem), 
+					(void *) &d_rv_cpu);
+	clSetKernelArg(	kernel, 
+					4, 
+					sizeof(cl_mem), 
+					(void *) &d_qv_cpu);
+	clSetKernelArg(	kernel, 
+					5, 
+					sizeof(cl_mem), 
+					(void *) &d_fv_cpu);
+
+	// launch kernel - all boxes
+	error = clEnqueueNDRangeKernel(	command_queue, 
+									kernel, 
+									1, 
+									NULL, 
+									global_work_size, 
+									local_work_size, 
+									0, 
+									NULL, 
+									NULL);
+	if (error != CL_SUCCESS) 
+		fatal_CL(error, __LINE__);
+
+	// Wait for all operations to finish NOT SURE WHERE THIS SHOULD GO
+	error = clFinish(command_queue);
+	if (error != CL_SUCCESS) 
+		fatal_CL(error, __LINE__);
+
+	time4 = get_time();
+
+	//======================================================================================================================================================150
+	//	CPU MEMORY				COPY OUT
+	//======================================================================================================================================================150
+
+	//====================================================================================================100
+	//	CPU MEMORY				COPY (IN & OUT)
+	//====================================================================================================100
+
+	//==================================================50
+	//	fv
+	//==================================================50
+
+	error = clEnqueueReadBuffer(command_queue,               // The command queue.
+								d_fv_cpu,                         // The image on the device.
+								CL_TRUE,                     // Blocking? (ie. Wait at this line until read has finished?)
+								0,                           // Offset. None in this case.
+								dim_cpu.space_mem, 			// Size to copy.
+								fv_cpu,                       // The pointer to the image on the host.
+								0,                           // Number of events in wait list. Not used.
+								NULL,                        // Event wait list. Not used.
+								NULL);                       // Event object for determining status. Not used.
+	if (error != CL_SUCCESS) 
+		fatal_CL(error, __LINE__);
+
+	// (enable for testing purposes only - prints some range of output, make sure not to initialize input in main.c with random numbers for comparison across runs)
+	// int g;
+	// int offset = 395;
+	// for(g=0; g<10; g++){
+		// printf("%f, %f, %f, %f\n", fv_cpu[offset+g].v, fv_cpu[offset+g].x, fv_cpu[offset+g].y, fv_cpu[offset+g].z);
+	// }
+
+	time5 = get_time();
+
+	//======================================================================================================================================================150
+	//	CPU MEMORY DEALLOCATION
 	//======================================================================================================================================================150
 
 	// Release kernels...
@@ -370,10 +493,10 @@ kernel_gpu_opencl_wrapper(	int xmax,
 	clReleaseProgram(program);
 
 	// Clean up the device memory...
-	clReleaseMemObject(d_initvalu);
-	clReleaseMemObject(d_finavalu);
-	clReleaseMemObject(d_params);
-	clReleaseMemObject(d_com);
+	clReleaseMemObject(d_rv_cpu);
+	clReleaseMemObject(d_qv_cpu);
+	clReleaseMemObject(d_fv_cpu);
+	clReleaseMemObject(d_box_cpu);
 
 	// Flush the queue
 	error = clFlush(command_queue);
@@ -386,44 +509,32 @@ kernel_gpu_opencl_wrapper(	int xmax,
 	// ???
 	clReleaseContext(context);
 
-	time4= get_time();
+	time6 = get_time();
 
 	//======================================================================================================================================================150
 	//	DISPLAY TIMING
 	//======================================================================================================================================================150
 
-	printf("Time spent in different stages of the application:\n");
-	printf("%15.12f s, %15.12f % : CPU: GPU SETUP\n", 								(float) (time1-time0) / 1000000, (float) (time1-time0) / (float) (time4-time0) * 100);
-	printf("%15.12f s, %15.12f % : CPU: ALLOCATE GPU MEMORY\n", 					(float) (time2-time1) / 1000000, (float) (time2-time1) / (float) (time4-time0) * 100);
-	printf("%15.12f s, %15.12f % : GPU: COMPUTATION\n", 							(float) (time3-time2) / 1000000, (float) (time3-time2) / (float) (time4-time0) * 100);
+	printf("Time spent in different stages of CPU_CUDA KERNEL:\n");
 
-	printf("\tGPU: COMPUTATION Components:\n");
-	printf("\t%15.12f s, %15.12f % : GPU: COPY DATA IN\n", 							(float) (timecopyin) / 1000000, (float) (timecopyin) / (float) (time4-time0) * 100);
-	printf("\t%15.12f s, %15.12f % : GPU: KERNEL\n", 								(float) (timekernel) / 1000000, (float) (timekernel) / (float) (time4-time0) * 100);
-	printf("\t%15.12f s, %15.12f % : GPU: COPY DATA OUT\n", 						(float) (timecopyout) / 1000000, (float) (timecopyout) / (float) (time4-time0) * 100);
-	timeother = time3-time2-timecopyin-timekernel-timecopyout;
-	printf("\t%15.12f s, %15.12f % : GPU: OTHER\n", 								(float) (timeother) / 1000000, (float) (timeother) / (float) (time4-time0) * 100);
+	printf("%15.12f s, %15.12f % : CPU: SET DEVICE / DRIVER INIT\n",	(float) (time1-time0) / 1000000, (float) (time1-time0) / (float) (time6-time0) * 100);
+	printf("%15.12f s, %15.12f % : CPU MEM: ALO\n", 					(float) (time2-time1) / 1000000, (float) (time2-time1) / (float) (time6-time0) * 100);
+	printf("%15.12f s, %15.12f % : CPU MEM: COPY IN\n",					(float) (time3-time2) / 1000000, (float) (time3-time2) / (float) (time6-time0) * 100);
 
-	printf("%15.12f s, %15.12f % : CPU: FREE GPU MEMORY\n", 						(float) (time4-time3) / 1000000, (float) (time4-time3) / (float) (time4-time0) * 100);
+	printf("%15.12f s, %15.12f % : CPU: KERNEL\n",						(float) (time4-time3) / 1000000, (float) (time4-time3) / (float) (time6-time0) * 100);
+
+	printf("%15.12f s, %15.12f % : CPU MEM: COPY OUT\n",				(float) (time5-time4) / 1000000, (float) (time5-time4) / (float) (time6-time0) * 100);
+	printf("%15.12f s, %15.12f % : CPU MEM: FRE\n", 					(float) (time6-time5) / 1000000, (float) (time6-time5) / (float) (time6-time0) * 100);
+
 	printf("Total time:\n");
-	printf("%.12f s\n", 															(float) (time4-time0) / 1000000);
-
-	//======================================================================================================================================================150
-	//	RETURN
-	//======================================================================================================================================================150
-
-	return 0;
-
-	//======================================================================================================================================================150
-	//	END
-	//======================================================================================================================================================150
+	printf("%.12f s\n", 												(float) (time6-time0) / 1000000);
 
 }
 
 //========================================================================================================================================================================================================200
-//	END
+//	END KERNEL_CPU_OPENCL_WRAPPER FUNCTION
 //========================================================================================================================================================================================================200
 
-// #ifdef __cplusplus
-// }
-// #endif
+#ifdef __cplusplus
+}
+#endif

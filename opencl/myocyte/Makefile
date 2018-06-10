@@ -12,13 +12,13 @@ C_C = gcc
 # ========================================================================================================================================================================================================200
 
 ./myocyte.out:	./main.o \
-			./kernel/kernel_gpu_opencl_wrapper.o \
+			./kernel/kernel_cpu_opencl_wrapper.o \
 			./util/file/file.o \
 			./util/num/num.o \
 			./util/timer/timer.o \
 			./util/opencl/opencl.o
 	$(C_C)	./main.o \
-			./kernel/kernel_gpu_opencl_wrapper.o \
+			./kernel/kernel_cpu_opencl_wrapper.o \
 			./util/file/file.o \
 			./util/num/num.o \
 			./util/timer/timer.o \
@@ -48,16 +48,16 @@ C_C = gcc
 #	KERNELS
 # ======================================================================================================================================================150
 
-./kernel/kernel_gpu_opencl_wrapper.o:	./common.h \
-										./kernel/kernel_gpu_opencl_wrapper.h \
-										./kernel/kernel_gpu_opencl_wrapper.c \
+./kernel/kernel_cpu_opencl_wrapper.o:	./common.h \
+										./kernel/kernel_cpu_opencl_wrapper.h \
+										./kernel/kernel_cpu_opencl_wrapper.c \
 										./kernel/solver.c \
 										./kernel/embedded_fehlberg_7_8.c \
 										./kernel/master.c \
-										./kernel/kernel_gpu_opencl.cl
-	$(C_C)	./kernel/kernel_gpu_opencl_wrapper.c \
+										./kernel/kernel_cpu_opencl.cl
+	$(C_C)	./kernel/kernel_cpu_opencl_wrapper.c \
 			-c \
-			-o ./kernel/kernel_gpu_opencl_wrapper.o \
+			-o ./kernel/kernel_cpu_opencl_wrapper.o \
 			-I$(OPENCL_INC) \
 			-O3
 

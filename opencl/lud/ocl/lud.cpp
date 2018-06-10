@@ -197,7 +197,7 @@ main ( int argc, char *argv[] )
 	fclose(fp);
 
 	// Use 1: GPU  0: CPU
-	int use_gpu = 1;
+	int use_gpu = 0;
 	// OpenCL initialization
 	if(initialize(use_gpu)) return -1;
 	// compile kernel

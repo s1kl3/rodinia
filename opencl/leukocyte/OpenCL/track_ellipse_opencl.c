@@ -27,7 +27,7 @@ void IMGVF_OpenCL(MAT **I, MAT **IMGVF, double vx, double vy, double e, int max_
 
 	cl_int error;
 	
-	// Initialize the data on the GPU
+	// Initialize the data on the CPU
 	IMGVF_OpenCL_init(I, num_cells);
 	
 	if (! compiled) {
@@ -75,7 +75,7 @@ void IMGVF_OpenCL(MAT **I, MAT **IMGVF, double vx, double vy, double e, int max_
 	clSetKernelArg(IMGVF_kernel, 8, sizeof(cl_int), (void *) &max_iterations);
 	clSetKernelArg(IMGVF_kernel, 9, sizeof(cl_float), (void *) &cutoff_float);
 	
-	// Compute the MGVF on the GPU
+	// Compute the MGVF on the CPU
 	error = clEnqueueNDRangeKernel(command_queue, IMGVF_kernel, 1, NULL, &global_work_size, &local_work_size, 0, NULL, NULL);
 	check_error(error, __FILE__, __LINE__);
 	
@@ -83,12 +83,12 @@ void IMGVF_OpenCL(MAT **I, MAT **IMGVF, double vx, double vy, double e, int max_
 	error = clFinish(command_queue);
 	check_error(error, __FILE__, __LINE__);
 	
-	// Copy back the final results from the GPU
+	// Copy back the final results from the CPU
 	IMGVF_OpenCL_cleanup(IMGVF, num_cells);
 }
 
 
-// Initializes data on the GPU for the MGVF kernel
+// Initializes data on the CPU for the MGVF kernel
 void IMGVF_OpenCL_init(MAT **IE, int num_cells) {
 	cl_int error;
 	

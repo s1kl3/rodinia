@@ -32,7 +32,7 @@
 //	KERNEL
 //======================================================================================================================================================150
 
-#include "./kernel/kernel_gpu_opencl_wrapper.h"
+#include "./kernel/kernel_cpu_opencl_wrapper.h"
 
 //======================================================================================================================================================150
 //	END
@@ -199,7 +199,7 @@ main(	int argc,
 	//	KERNELL WRAPPER CALL
 	//======================================================================================================================================================150
 
-	kernel_gpu_opencl_wrapper(	common,
+	kernel_cpu_opencl_wrapper(	common,
 								endoRow,
 								endoCol,
 								tEndoRowLoc,
@@ -268,7 +268,7 @@ main(	int argc,
 	printf("%15.12f s, %15.12f % : READ INITIAL VIDEO FRAME\n",												(fp) (time1-time0) / 1000000, (fp) (time1-time0) / (fp) (time5-time0) * 100);
 	printf("%15.12f s, %15.12f % : READ COMMAND LINE PARAMETERS\n",											(fp) (time2-time1) / 1000000, (fp) (time2-time1) / (fp) (time5-time0) * 100);
 	printf("%15.12f s, %15.12f % : READ INPUTS FROM FILE\n",												(fp) (time3-time2) / 1000000, (fp) (time3-time2) / (fp) (time5-time0) * 100);
-	printf("%15.12f s, %15.12f % : GPU ALLOCATION, COPYING, COMPUTATION\n",									(fp) (time4-time3) / 1000000, (fp) (time4-time3) / (fp) (time5-time0) * 100);
+	printf("%15.12f s, %15.12f % : CPU ALLOCATION, COPYING, COMPUTATION\n",									(fp) (time4-time3) / 1000000, (fp) (time4-time3) / (fp) (time5-time0) * 100);
 	printf("%15.12f s, %15.12f % : FREE MEMORY\n", 															(fp) (time5-time4) / 1000000, (fp) (time5-time4) / (fp) (time5-time0) * 100);
 	printf("Total time:\n");
 	printf("%15.12f s\n", 																					(fp) (time5-time0) / 1000000);

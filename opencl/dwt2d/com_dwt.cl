@@ -114,8 +114,8 @@ __kernel void c_CopySrcToComponent (__global int *d_c,
 }
 
 
-static void mirror( int *d,
-                    const int sizeD)
+void mirror(int *d,
+            const int sizeD)
 {
 	if ((*d )>= sizeD)
 	{

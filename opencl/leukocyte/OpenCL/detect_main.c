@@ -14,8 +14,8 @@ int main(int argc, char ** argv) {
 		exit(EXIT_FAILURE);
 	}
 
-	// Choose the best GPU in case there are multiple available
-	choose_GPU();
+	// Choose the best CPU in case there are multiple available
+	choose_CPU();
 
 	// Keep track of the start time of the program
 	long long program_start_time = get_time();
@@ -32,7 +32,7 @@ int main(int argc, char ** argv) {
 		exit(EXIT_FAILURE);
 	}
 	
-	// Transfer precomputed constants to the GPU
+	// Transfer precomputed constants to the CPU
 	compute_constants();
 	
 	int i, j, *crow, *ccol, pair_counter = 0, x_result_len = 0, Iter = 20, ns = 4, k_count = 0, n;

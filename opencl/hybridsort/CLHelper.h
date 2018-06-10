@@ -183,7 +183,7 @@ void _clInit()
     //--cambine-2: create an OpenCL context
     cl_context_properties cprops[3] = { CL_CONTEXT_PLATFORM, (cl_context_properties)targetPlatform, 0 };
     oclHandles.context = clCreateContextFromType(cprops, 
-                                                CL_DEVICE_TYPE_GPU, 
+                                                CL_DEVICE_TYPE_CPU, 
                                                 NULL, 
                                                 NULL, 
                                                 &resultCL);
@@ -193,7 +193,7 @@ void _clInit()
     //-----------------------------------------------
     //--cambine-3: detect OpenCL devices	
     /* First, get the size of device list */
-   oclHandles.cl_status = clGetDeviceIDs(targetPlatform, CL_DEVICE_TYPE_GPU, 0, NULL, &deviceListSize);
+   oclHandles.cl_status = clGetDeviceIDs(targetPlatform, CL_DEVICE_TYPE_CPU, 0, NULL, &deviceListSize);
    if(oclHandles.cl_status!=CL_SUCCESS){
    	throw(string("exception in _clInit -> clGetDeviceIDs"));   	
    }
@@ -209,7 +209,7 @@ void _clInit()
         throw(string("InitCL()::Error: Could not allocate memory."));
 
     /* Next, get the device list data */
-   oclHandles.cl_status = clGetDeviceIDs(targetPlatform, CL_DEVICE_TYPE_GPU, deviceListSize, \
+   oclHandles.cl_status = clGetDeviceIDs(targetPlatform, CL_DEVICE_TYPE_CPU, deviceListSize, \
 								oclHandles.devices, NULL);
    if(oclHandles.cl_status!=CL_SUCCESS){
    	throw(string("exception in _clInit -> clGetDeviceIDs-2"));   	

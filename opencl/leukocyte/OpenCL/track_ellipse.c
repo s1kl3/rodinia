@@ -299,7 +299,7 @@ MAT **MGVF(MAT **IE, double vx, double vy, int Nc) {
 		IMGVF[cell_num] = m_get(m, n);
 	}
 	
-	// Offload the MGVF computation to the GPU
+	// Offload the MGVF computation to the CPU
 	IMGVF_OpenCL(IE, IMGVF, vx, vy, epsilon, iterations, converge, Nc);
 
 	return IMGVF;

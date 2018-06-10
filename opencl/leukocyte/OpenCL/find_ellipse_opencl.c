@@ -213,7 +213,7 @@ float *dilate_OpenCL(int max_gicov_m, int max_gicov_n, int strel_m, int strel_n)
 }
 
 
-// Chooses the most appropriate GPU on which to execute
+// Chooses the most appropriate CPU on which to execute
 void select_device() {
 	cl_int error;
 
@@ -233,18 +233,18 @@ void select_device() {
 	error = clGetPlatformIDs(num_platforms, platform_ids, NULL);
 	check_error(error, __FILE__, __LINE__);
 	
-	// Iterate through all available platforms, choosing the first one that has a GPU
+	// Iterate through all available platforms, choosing the first one that has a CPU
 	int i;
 	for (i = 0; i < num_platforms; i++) {
 	
 		// Create an OpenCL context
 		cl_context_properties ctxprop[] = { CL_CONTEXT_PLATFORM, (cl_context_properties) platform_ids[i], 0};
-		context = clCreateContextFromType(ctxprop, CL_DEVICE_TYPE_GPU, NULL, NULL, &error);
-		// If this platform has no GPU, try the next one
+		context = clCreateContextFromType(ctxprop, CL_DEVICE_TYPE_CPU, NULL, NULL, &error);
+		// If this platform has no CPU, try the next one
 		if (error == CL_DEVICE_NOT_FOUND) continue;
 		check_error(error, __FILE__, __LINE__);
 		
-		// Get the list of devices (GPUs)
+		// Get the list of devices (CPUs)
 		size_t size;
 		error = clGetContextInfo(context, CL_CONTEXT_DEVICES, 0, NULL, &size);
 		check_error(error, __FILE__, __LINE__);
@@ -265,13 +265,13 @@ void select_device() {
 		return;
 	}
 	
-	// If we reach here, no platform has a GPU
-	printf("Error: None of the platforms has a GPU\n");
+	// If we reach here, no platform has a CPU
+	printf("Error: None of the platforms has a CPU\n");
 	exit(EXIT_FAILURE);
 }
 
 
-// Transfers pre-computed constants used by the two kernels to the GPU
+// Transfers pre-computed constants used by the two kernels to the CPU
 void transfer_constants(float *host_sin_angle, float *host_cos_angle, int *host_tX, int *host_tY, int strel_m, int strel_n, float *host_strel) {
 	cl_int error;
 

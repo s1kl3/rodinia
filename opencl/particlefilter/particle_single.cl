@@ -350,4 +350,4 @@ __kernel void likelihood_kernel(__global float * arrayX, __global float * arrayY
 	
 }//*/
 
-//#endif
+// #endif

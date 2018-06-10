@@ -33,14 +33,14 @@ OCL_LIB = -lOpenCL
 # ========================================================================================================================================================================================================200
 
 b+tree.out:	./main.o \
-		./kernel/kernel_gpu_opencl_wrapper.o \
-		./kernel/kernel_gpu_opencl_wrapper_2.o \
+		./kernel/kernel_cpu_opencl_wrapper.o \
+		./kernel/kernel_cpu_opencl_wrapper_2.o \
 		./util/timer/timer.o \
 		./util/num/num.o \
 		./util/opencl/opencl.o
 	$(C_C)	./main.o \
-			./kernel/kernel_gpu_opencl_wrapper.o \
-			./kernel/kernel_gpu_opencl_wrapper_2.o \
+			./kernel/kernel_cpu_opencl_wrapper.o \
+			./kernel/kernel_cpu_opencl_wrapper_2.o \
 			./util/timer/timer.o \
 			./util/num/num.o \
 			./util/opencl/opencl.o \
@@ -67,21 +67,21 @@ main.o:	./common.h \
 #	KERNELS
 # ======================================================================================================================================================150
 
-./kernel/kernel_gpu_opencl_wrapper.o:	./common.h \
-										./kernel/kernel_gpu_opencl_wrapper.h \
-										./kernel/kernel_gpu_opencl_wrapper.c
-	$(C_C)	$(KERNEL_DIM) ./kernel/kernel_gpu_opencl_wrapper.c \
+./kernel/kernel_cpu_opencl_wrapper.o:	./common.h \
+										./kernel/kernel_cpu_opencl_wrapper.h \
+										./kernel/kernel_cpu_opencl_wrapper.c
+	$(C_C)	$(KERNEL_DIM) ./kernel/kernel_cpu_opencl_wrapper.c \
 			-c \
-			-o ./kernel/kernel_gpu_opencl_wrapper.o \
+			-o ./kernel/kernel_cpu_opencl_wrapper.o \
 			-O3 \
 			-I$(OPENCL_INC)
 
-./kernel/kernel_gpu_opencl_wrapper_2.o:	./common.h \
-										./kernel/kernel_gpu_opencl_wrapper_2.h \
-										./kernel/kernel_gpu_opencl_wrapper_2.c
-	$(C_C)	$(KERNEL_DIM) ./kernel/kernel_gpu_opencl_wrapper_2.c \
+./kernel/kernel_cpu_opencl_wrapper_2.o:	./common.h \
+										./kernel/kernel_cpu_opencl_wrapper_2.h \
+										./kernel/kernel_cpu_opencl_wrapper_2.c
+	$(C_C)	$(KERNEL_DIM) ./kernel/kernel_cpu_opencl_wrapper_2.c \
 			-c \
-			-o ./kernel/kernel_gpu_opencl_wrapper_2.o \
+			-o ./kernel/kernel_cpu_opencl_wrapper_2.o \
 			-O3 \
 			-I$(OPENCL_INC)
 

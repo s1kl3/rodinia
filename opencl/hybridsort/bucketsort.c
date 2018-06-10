@@ -89,10 +89,10 @@ void init_bucketsort(int listsize)
     cl_platform_id platformID[num];
     clGetPlatformIDs(num, platformID, NULL);
     
-    clGetDeviceIDs(platformID[1],CL_DEVICE_TYPE_GPU,0,NULL,&num);
+    clGetDeviceIDs(platformID[0],CL_DEVICE_TYPE_CPU,0,NULL,&num);
     
     cl_device_id devices[num];
-    err = clGetDeviceIDs(platformID[1],CL_DEVICE_TYPE_GPU,num,devices,NULL);
+    err = clGetDeviceIDs(platformID[0],CL_DEVICE_TYPE_CPU,num,devices,NULL);
 //    int gpu = 1;
 //    err = clGetDeviceIDs(NULL, gpu ? CL_DEVICE_TYPE_GPU : CL_DEVICE_TYPE_CPU, 2, &device_id, NULL);
     
@@ -199,15 +199,15 @@ void histogramInit(int listsize) {
     cl_platform_id platformID[num];
     clGetPlatformIDs(num, platformID, NULL);
     
-    clGetDeviceIDs(platformID[1],CL_DEVICE_TYPE_GPU,0,NULL,&num);
+    clGetDeviceIDs(platformID[0],CL_DEVICE_TYPE_CPU,0,NULL,&num);
     
     char name[128];
     
-    clGetPlatformInfo(platformID[1], CL_PLATFORM_PROFILE,128,name,NULL);
+    clGetPlatformInfo(platformID[0], CL_PLATFORM_PROFILE,128,name,NULL);
     
     
     cl_device_id devices[num];
-    err = clGetDeviceIDs(platformID[1],CL_DEVICE_TYPE_GPU,num,devices,NULL);
+    err = clGetDeviceIDs(platformID[0],CL_DEVICE_TYPE_CPU,num,devices,NULL);
     //    int gpu = 1;
     //    err = clGetDeviceIDs(NULL, gpu ? CL_DEVICE_TYPE_GPU : CL_DEVICE_TYPE_CPU, 2, &device_id, NULL);
     
@@ -276,7 +276,7 @@ void histogramInit(int listsize) {
     }
     
 }
-void histogram1024GPU(unsigned int *h_Result, float *d_Data, float minimum, float maximum,int listsize){
+void histogram1024CPU(unsigned int *h_Result, float *d_Data, float minimum, float maximum,int listsize){
     err = clEnqueueWriteBuffer(histoCommands, histoInput, CL_TRUE, 0, listsize*sizeof(float), d_Data, 0, NULL, NULL);
     if (err != CL_SUCCESS)
     {
@@ -354,7 +354,7 @@ void bucketSort(float *d_input, float *d_output, int listsize,
 //	// First pass - Create 1024 bin histogram
 //	////////////////////////////////////////////////////////////////////////////
     histogramInit(listsize);
-	histogram1024GPU(h_offsets, d_input, minimum, maximum, listsize);
+	histogram1024CPU(h_offsets, d_input, minimum, maximum, listsize);
     finish_histogram();
     for(int i=0; i<histosize; i++) historesult[i] = (float)h_offsets[i];
 

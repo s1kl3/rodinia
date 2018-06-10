@@ -453,7 +453,7 @@ static int allocate(int Nparticles, int countOnes){
 	fclose(fp);
 
 	// OpenCL initialization
-	int use_gpu = 1;
+	int use_gpu = 0;
 	if (initialize(use_gpu)) return -1;
 
 	// compile kernel

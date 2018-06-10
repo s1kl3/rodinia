@@ -112,7 +112,7 @@ int bpnn_train_kernel(BPNN *net, float *eo, float *eh)
 	fread(source + strlen(source), sourcesize, 1, fp);
 	fclose(fp);
 	
-	int use_gpu = 1;
+	int use_gpu = 0;
 	if(initialize(use_gpu)) return -1;
 	
 	// compile kernel
@@ -181,9 +181,12 @@ int bpnn_train_kernel(BPNN *net, float *eo, float *eh)
 	if(err != CL_SUCCESS) { printf("ERROR: clCreateBuffer hidden_delta_ocl\n"); return -1;}
 	input_prev_weights_ocl = clCreateBuffer(context, CL_MEM_READ_WRITE, (in + 1) * (hid + 1) * sizeof(float), NULL, &err );
 	if(err != CL_SUCCESS) { printf("ERROR: clCreateBuffer input_prev_weights_ocl\n"); return -1;}
-		
-	printf("Performing GPU computation\n");
-	
+
+    if(use_gpu)
+      printf("Performing GPU computation\n");
+    else
+      printf("Performing CPU computation\n");
+
 	//write buffers
 	err = clEnqueueWriteBuffer(cmd_queue, input_ocl, 1, 0, (in + 1) * sizeof(float), net->input_units, 0, 0, 0);
 	if(err != CL_SUCCESS) { printf("ERROR: clEnqueueWriteBuffer input_ocl\n"); return -1; }
